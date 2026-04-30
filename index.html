@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Noospheric Network Meditation v5 — WebXR Viewing Space</title>
+  <style>
+    html, body { margin:0; height:100%; overflow:hidden; background:#02070a; color:#f7e7b2; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
+    #overlay { position:fixed; left:16px; top:14px; z-index:10; max-width:430px; padding:14px 16px; border:1px solid rgba(255,188,63,.45); border-radius:16px; background:linear-gradient(135deg, rgba(2,10,14,.86), rgba(5,30,36,.64)); box-shadow:0 0 30px rgba(0,255,255,.14); backdrop-filter: blur(6px); }
+    #overlay h1 { margin:0 0 6px; font-size:18px; letter-spacing:.04em; text-transform:uppercase; }
+    #overlay p { margin:4px 0; line-height:1.35; font-size:13px; color:#ffe9b6; }
+    #overlay .small { font-size:12px; color:#8eeeff; }
+    #hud { position:fixed; right:16px; bottom:16px; z-index:10; padding:10px 12px; border-radius:12px; background:rgba(0,0,0,.45); font-size:12px; color:#c4fbff; border:1px solid rgba(60,230,255,.35); }
+    a { color:#ffb13d; }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <h1>Collective Computer-Assisted Meditation</h1>
+    <p>A pulsing WebXR noosphere chamber: Earth, realistic meditating participants, a mind-network of beacon-thought nodes, dense concept panels, and a central blue four-armed noospheric being, with any front-center humanoid geometry removed.</p>
+    <p class="small">Desktop: drag to orbit, wheel to zoom. Quest/browser: use the Enter VR button. Host through HTTPS for immersive WebXR.</p>
+  </div>
+  <div id="hud">Loading noospheric scene…</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+const hud = document.getElementById('hud');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x020a0f, 0.032);
+const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.05, 260);
+camera.position.set(0, 5.3, 14.5);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.xr.enabled = true;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.18;
+document.body.appendChild(renderer.domElement);
+document.body.appendChild(VRButton.createButton(renderer));
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2.6, 0);
+controls.enableDamping = true;
+controls.maxDistance = 42;
+controls.minDistance = 4;
+
+const root = new THREE.Group();
+scene.add(root);
+
+// ---------- Materials ----------
+const matGold = new THREE.MeshStandardMaterial({ color:0xffa22c, emissive:0xff7b00, emissiveIntensity:0.42, roughness:.42, metalness:.35 });
+const matCyan = new THREE.MeshStandardMaterial({ color:0x42e6ff, emissive:0x0cc8ff, emissiveIntensity:.75, roughness:.35, metalness:.05 });
+const matDimCyan = new THREE.MeshStandardMaterial({ color:0x0c5563, emissive:0x074f5c, emissiveIntensity:.38, roughness:.65 });
+const matSkin = new THREE.MeshStandardMaterial({ color:0xd8955d, roughness:.7, metalness:0.0 });
+const matSkin2 = new THREE.MeshStandardMaterial({ color:0xc98358, roughness:.72 });
+const matSkin3 = new THREE.MeshStandardMaterial({ color:0x9f6a4e, roughness:.75 });
+const matHair = new THREE.MeshStandardMaterial({ color:0x080506, roughness:.8 });
+const matClothA = new THREE.MeshStandardMaterial({ color:0x0e6976, roughness:.75, emissive:0x052b31, emissiveIntensity:.18 });
+const matClothB = new THREE.MeshStandardMaterial({ color:0xf28a19, roughness:.62, emissive:0x4a1a00, emissiveIntensity:.18 });
+const matClothC = new THREE.MeshStandardMaterial({ color:0x263948, roughness:.8, emissive:0x050b13, emissiveIntensity:.2 });
+
+// ---------- Lighting ----------
+scene.add(new THREE.HemisphereLight(0x88f8ff, 0x10030a, 1.3));
+const sun = new THREE.DirectionalLight(0xffc36c, 2.1); sun.position.set(5, 9, 6); scene.add(sun);
+const fill = new THREE.PointLight(0x13dbff, 6.5, 44); fill.position.set(-7, 4, -6); scene.add(fill);
+const warm = new THREE.PointLight(0xff8618, 5, 35); warm.position.set(6, 2.7, 4); scene.add(warm);
+
+// ---------- Background star field ----------
+function makeStars(count=1600){
+  const g = new THREE.BufferGeometry();
+  const p = new Float32Array(count*3), c = new Float32Array(count*3), s = new Float32Array(count);
+  for(let i=0;i<count;i++){
+    const r = 55 + Math.random()*130, th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+    p[i*3] = r*Math.sin(ph)*Math.cos(th); p[i*3+1] = r*Math.cos(ph); p[i*3+2] = r*Math.sin(ph)*Math.sin(th);
+    const warm = Math.random(); c[i*3] = warm?1:.4; c[i*3+1] = .75+Math.random()*.25; c[i*3+2] = warm?.35:1; s[i]=Math.random()*1.8+.35;
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p,3));
+  g.setAttribute('color', new THREE.BufferAttribute(c,3));
+  g.setAttribute('size', new THREE.BufferAttribute(s,1));
+  const m = new THREE.PointsMaterial({ size:.08, vertexColors:true, transparent:true, opacity:.85, depthWrite:false });
+  const pts = new THREE.Points(g,m); scene.add(pts); return pts;
+}
+const stars = makeStars();
+
+// ---------- Procedural Earth texture ----------
+function makeEarthTexture(){
+  const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,512); grad.addColorStop(0,'#0e5266'); grad.addColorStop(.55,'#073247'); grad.addColorStop(1,'#051928');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,1024,512);
+  ctx.globalAlpha = .94;
+  function blob(points, fill){
+    ctx.beginPath(); ctx.moveTo(points[0][0], points[0][1]);
+    for(let i=1;i<points.length;i++) ctx.lineTo(points[i][0], points[i][1]);
+    ctx.closePath(); ctx.fillStyle=fill; ctx.fill();
+  }
+  const land = '#0b1b1e', rim='#1dd9c6';
+  blob([[210,155],[245,100],[305,115],[330,185],[305,245],[260,255],[220,220]], land); // N America
+  blob([[330,270],[365,300],[390,365],[360,470],[315,430],[300,350]], land); // S America
+  blob([[505,145],[560,110],[605,165],[590,230],[520,240],[485,200]], land); // Europe/Africa
+  blob([[610,135],[715,105],[830,170],[815,245],[690,240],[620,200]], land); // Asia
+  blob([[790,320],[850,335],[885,390],[835,420],[775,380]], land); // Australia
+  ctx.strokeStyle = rim; ctx.lineWidth = 2; ctx.globalAlpha = .22;
+  for(let i=0;i<40;i++){ ctx.beginPath(); const y=Math.random()*512; ctx.moveTo(0,y); for(let x=0;x<1024;x+=80) ctx.lineTo(x,y+Math.sin(x*.015+i)*8); ctx.stroke(); }
+  const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; return tex;
+}
+
+const earth = new THREE.Mesh(
+  new THREE.SphereGeometry(2.25, 96, 48),
+  new THREE.MeshStandardMaterial({ map:makeEarthTexture(), emissive:0x0a5462, emissiveIntensity:.28, roughness:.72, metalness:.05 })
+);
+earth.position.set(0,2.25,-5.2); root.add(earth);
+const earthGlow = new THREE.Mesh(new THREE.SphereGeometry(2.36,96,48), new THREE.MeshBasicMaterial({color:0x11f2ff, transparent:true, opacity:.10, depthWrite:false}));
+earth.add(earthGlow);
+
+// ---------- Text panels ----------
+function canvasTextTexture(lines, opts={}){
+  const w=1024,h=512, c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
+  ctx.fillStyle = opts.bg || 'rgba(255,232,152,0.96)'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = opts.stroke || '#041014'; ctx.lineWidth=18; ctx.strokeRect(9,9,w-18,h-18);
+  ctx.fillStyle = opts.color || '#071015'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font = `900 ${opts.size||66}px Arial Black, Impact, sans-serif`;
+  const gap = opts.gap || 78; const start = h/2 - gap*(lines.length-1)/2;
+  lines.forEach((line,i)=>ctx.fillText(line, w/2, start+i*gap));
+  const tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace; return tex;
+}
+function makePanel(lines, pos, rotY=0, scale=[4.4,2.05], opts={}){
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(scale[0],scale[1]), new THREE.MeshBasicMaterial({ map:canvasTextTexture(lines,opts), side:THREE.DoubleSide, transparent:false }));
+  mesh.position.set(...pos); mesh.rotation.y=rotY; root.add(mesh); return mesh;
+}
+const panels = [];
+panels.push(makePanel(['COLLECTIVE COMPUTER-','ASSISTED MEDITATION','FORMS A NETWORKED','CONSCIOUSNESS.'],[-5.0,6.15,-1.3],.25,[5.4,2.15],{size:58,gap:56}));
+panels.push(makePanel(['PSI-INTEGRATION','AS A SHARED','ATTENTION FIELD'],[4.9,6.1,-1.9],-.35,[3.9,1.82],{size:64,gap:70}));
+panels.push(makePanel(['EACH THOUGHT','BECOMES A BEACON','AND ADDRESS'],[0,6.85,-6.0],0,[4.4,1.75],{size:62,gap:68}));
+panels.push(makePanel(['EMBRYONIC','NOOSPHERIC','BRAIN'],[-7.0,3.2,-5.4],.72,[3.2,1.52],{size:66,gap:60}));
+panels.push(makePanel(['MORPHOGENETIC','FABRIC:','COHERENCE + FEEDBACK'],[7.0,3.2,-5.5],-.72,[3.9,1.52],{size:54,gap:55}));
+
+// Image reference panels from your uploaded concept art
+const loader = new THREE.TextureLoader();
+function imagePanel(url,pos,rotY,scale){
+  const tex = loader.load(url); tex.colorSpace=THREE.SRGBColorSpace;
+  const m = new THREE.MeshBasicMaterial({map:tex, side:THREE.DoubleSide});
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(scale[0], scale[1]), m);
+  mesh.position.set(...pos); mesh.rotation.y = rotY; root.add(mesh); return mesh;
+}
+imagePanel('assets/collective_meditation_network.jpg',[-7.2,1.45,2.7],.82,[4.4,2.93]);
+imagePanel('assets/noosphere_brain_panel.jpg',[7.2,1.95,2.6],-.82,[2.75,4.12]);
+
+// ---------- Humans ----------
+function ellipsoid(name, geo, mat, pos, scale, rot=[0,0,0]){
+  const mesh = new THREE.Mesh(geo,mat); mesh.name=name; mesh.position.set(...pos); mesh.scale.set(...scale); mesh.rotation.set(...rot); mesh.castShadow=true; mesh.receiveShadow=true; return mesh;
+}
+const sphere = new THREE.SphereGeometry(1,32,16);
+const cyl = new THREE.CylinderGeometry(.24,.26,1,24);
+function limb(mat, len, radius=.16){
+  const g = new THREE.CylinderGeometry(radius*.9,radius,len,24);
+  const m = new THREE.Mesh(g,mat); return m;
+}
+function createMeditator({pos=[0,0,0], scale=1, cloth=matClothA, skin=matSkin, hair=true, yaw=0}){
+  const h = new THREE.Group(); h.position.set(...pos); h.scale.setScalar(scale); h.rotation.y = yaw;
+  const torso = ellipsoid('torso',sphere,cloth,[0,1.55,0],[.55,.82,.33],[0,0,0]);
+  const neck = ellipsoid('neck',sphere,skin,[0,2.22,0],[.18,.22,.17]);
+  const head = ellipsoid('head',sphere,skin,[0,2.62,0],[.36,.47,.32]);
+  h.add(torso,neck,head);
+  if(hair){ h.add(ellipsoid('hair',sphere,matHair,[0,2.72,-.035],[.39,.39,.34])); }
+  const faceMat = new THREE.MeshBasicMaterial({color:0x24120d});
+  const eyeGeo = new THREE.SphereGeometry(.025,8,6);
+  const e1 = new THREE.Mesh(eyeGeo,faceMat), e2=e1.clone(); e1.position.set(-.12,2.67,.305); e2.position.set(.12,2.67,.305); h.add(e1,e2);
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(.16,.014,.014), faceMat); mouth.position.set(0,2.49,.32); h.add(mouth);
+  // arms with hands in mudra
+  for(const side of [-1,1]){
+    const upper = limb(skin,.78,.105); upper.position.set(side*.52,1.75,.02); upper.rotation.z=side*1.08; upper.rotation.x=.25; h.add(upper);
+    const fore = limb(skin,.68,.095); fore.position.set(side*.58,1.12,.22); fore.rotation.z=side*1.27; fore.rotation.x=1.15; h.add(fore);
+    const hand = ellipsoid('hand',sphere,skin,[side*.82,.92,.46],[.12,.07,.10]); h.add(hand);
+  }
+  // crossed legs
+  for(const side of [-1,1]){
+    const thigh = limb(cloth,1.02,.18); thigh.position.set(side*.45,.72,.16); thigh.rotation.z=side*1.33; thigh.rotation.x=1.23; h.add(thigh);
+    const calf = limb(cloth,.92,.16); calf.position.set(side*.92,.50,.18); calf.rotation.z=-side*1.12; calf.rotation.x=1.36; h.add(calf);
+    const foot = ellipsoid('foot',sphere,skin,[side*1.18,.43,.48],[.22,.075,.13],[0,side*.2,0]); h.add(foot);
+  }
+  // subtle luminous chakra nodes
+  const chakraMat = new THREE.MeshBasicMaterial({color:0xffb13d, transparent:true, opacity:.9});
+  [[0,1.55,.36,.11],[0,2.66,.34,.07],[0,1.02,.37,.08]].forEach(([x,y,z,r])=>h.add(new THREE.Mesh(new THREE.SphereGeometry(r,20,10),chakraMat)).position.set(x,y,z));
+  root.add(h); return h;
+}
+
+function createAlienSprite({pos=[0,3.72,0.55], scale=1.0, yaw=0}){
+  const g = new THREE.Group();
+  g.position.set(...pos);
+  g.rotation.y = yaw;
+  g.scale.setScalar(scale);
+
+  const tex = loader.load('assets/alien_cutout.png');
+  tex.colorSpace = THREE.SRGBColorSpace;
+  if(renderer.capabilities.getMaxAnisotropy){ tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); }
+
+  const bodyMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, alphaTest: 0.05, depthWrite: false });
+  const glowMat = new THREE.MeshBasicMaterial({ map: tex, color: 0x6fe6ff, transparent: true, opacity: 0.22, side: THREE.DoubleSide, alphaTest: 0.01, blending: THREE.AdditiveBlending, depthWrite: false });
+  const auraMat = new THREE.MeshBasicMaterial({ color:0x1cb9ff, transparent:true, opacity:.06, side:THREE.DoubleSide, depthWrite:false });
+
+  const body = new THREE.Mesh(new THREE.PlaneGeometry(4.45, 5.05), bodyMat);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(4.85, 5.45), glowMat);
+  glow.position.z = -0.05;
+  const aura = new THREE.Mesh(new THREE.PlaneGeometry(5.7, 6.3), auraMat);
+  aura.position.set(0,0,-0.12);
+  g.add(aura, glow, body);
+
+  const haloGroup = new THREE.Group();
+  const halo1 = new THREE.Mesh(new THREE.TorusGeometry(1.0,.022,12,96), new THREE.MeshBasicMaterial({color:0xffc36c, transparent:true, opacity:.78, blending:THREE.AdditiveBlending, depthWrite:false}));
+  const halo2 = new THREE.Mesh(new THREE.TorusGeometry(1.28,.016,12,112), new THREE.MeshBasicMaterial({color:0x43e7ff, transparent:true, opacity:.52, blending:THREE.AdditiveBlending, depthWrite:false}));
+  const halo3 = new THREE.Mesh(new THREE.TorusGeometry(1.53,.012,12,128), new THREE.MeshBasicMaterial({color:0xffb13d, transparent:true, opacity:.26, blending:THREE.AdditiveBlending, depthWrite:false}));
+  haloGroup.add(halo1,halo2,halo3);
+  haloGroup.position.set(0,1.73,-0.16);
+  g.add(haloGroup);
+
+  const lowerGlow = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.78, 64), new THREE.MeshBasicMaterial({color:0x46deff, transparent:true, opacity:.12, side:THREE.DoubleSide, blending:THREE.AdditiveBlending, depthWrite:false}));
+  lowerGlow.position.set(0,-1.4,-0.08);
+  lowerGlow.rotation.x = -Math.PI/2;
+  g.add(lowerGlow);
+
+  g.userData.body = body;
+  g.userData.glow = glow;
+  g.userData.aura = aura;
+  g.userData.haloGroup = haloGroup;
+  g.userData.lowerGlow = lowerGlow;
+  root.add(g);
+  return g;
+}
+
+let alienDeity;
+const humans = [];
+humans.push(createMeditator({pos:[-3.9,.05,-1.1],scale:1.25,cloth:matClothA,skin:matSkin2,hair:true,yaw:.30}));
+alienDeity = createAlienSprite({pos:[0,3.72,0.55],scale:1.0,yaw:0});
+humans.push(createMeditator({pos:[3.9,.05,-1.0],scale:1.25,cloth:matClothC,skin:matSkin3,hair:false,yaw:-.30}));
+humans.push(createMeditator({pos:[-6.2,.1,-4.1],scale:.85,cloth:matClothC,skin:matSkin,hair:true,yaw:.85}));
+humans.push(createMeditator({pos:[6.2,.1,-4.0],scale:.85,cloth:matClothA,skin:matSkin2,hair:true,yaw:-.85}));
+
+
+function removeFrontCenterHumanoidArtifacts(){
+  const toRemove = [];
+  const worldPos = new THREE.Vector3();
+  root.traverse(obj => {
+    if(!obj.isMesh) return;
+    if(alienDeity && (obj === alienDeity || obj.parent === alienDeity || obj.parent?.parent === alienDeity)) return;
+    obj.getWorldPosition(worldPos);
+    const central = Math.abs(worldPos.x) < 1.8 && worldPos.z > -0.8 && worldPos.z < 1.8 && worldPos.y > 0.15 && worldPos.y < 4.4;
+    if(!central) return;
+    const geomType = obj.geometry?.type || '';
+    const color = obj.material?.color ? obj.material.color.getHex() : null;
+    const namedHumanoid = ['torso','head','neck','hair','hand','foot'].includes(obj.name);
+    const humanGeom = geomType === 'SphereGeometry' || geomType === 'CylinderGeometry' || geomType === 'BoxGeometry';
+    const humanColors = new Set([0xd8955d,0xc98358,0x9f6a4e,0x0e6976,0xf28a19,0x263948,0x080506]);
+    const likelyHumanArtifact = namedHumanoid || (humanGeom && humanColors.has(color));
+    // avoid deleting tiny network nodes or intentional halo/ring effects
+    const radius = obj.geometry?.parameters?.radius || obj.geometry?.parameters?.radiusTop || 0;
+    if(likelyHumanArtifact && radius > 0.02){
+      toRemove.push(obj);
+    }
+  });
+  toRemove.forEach(o => o.parent && o.parent.remove(o));
+}
+
+if(alienDeity){
+  alienDeity.traverse(obj => {
+    if(obj.isMesh){
+      obj.renderOrder = 20;
+      if(obj.material) obj.material.depthTest = false;
+    }
+  });
+}
+removeFrontCenterHumanoidArtifacts();
+
+// ---------- Network nodes and filaments ----------
+const nodePositions = [];
+for(let i=0;i<34;i++){
+  const a = i/34*Math.PI*2;
+  const ring = (i%3)+1;
+  const r = 2.4 + ring*1.7 + Math.sin(i*1.9)*.35;
+  const y = 2.2 + Math.sin(i*.73)*2.4 + (i%5===0?1.0:0);
+  nodePositions.push(new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r-2.2));
+}
+nodePositions.push(new THREE.Vector3(0,3.72,-2.55));
+const nodeGroup = new THREE.Group(); root.add(nodeGroup);
+const nodeMeshes=[];
+nodePositions.forEach((p,i)=>{
+  const mat = (i%4===0)?matGold:((i%3===0)?matCyan:matDimCyan);
+  const n = new THREE.Mesh(new THREE.SphereGeometry(i%5===0?.18:.115,24,12), mat);
+  n.position.copy(p); nodeGroup.add(n); nodeMeshes.push(n);
+});
+const lineMat = new THREE.LineBasicMaterial({color:0x19e7ff, transparent:true, opacity:.30, blending:THREE.AdditiveBlending});
+const lineMatGold = new THREE.LineBasicMaterial({color:0xffa22c, transparent:true, opacity:.52, blending:THREE.AdditiveBlending});
+function addLine(a,b,gold=false){
+  const geo = new THREE.BufferGeometry().setFromPoints([a,b]); const line = new THREE.Line(geo, gold?lineMatGold:lineMat); root.add(line); return line;
+}
+const lines=[];
+for(let i=0;i<nodePositions.length;i++){
+  lines.push(addLine(nodePositions[i], nodePositions[(i+1)%nodePositions.length], i%7===0));
+  if(i%2===0) lines.push(addLine(nodePositions[i], nodePositions[(i+9)%nodePositions.length], i%6===0));
+  if(i%5===0) lines.push(addLine(nodePositions[i], new THREE.Vector3(0,3.72,-2.55), true));
+}
+// Links from humans to central network
+humans.forEach((h,i)=>{
+  const p = new THREE.Vector3(); h.getWorldPosition(p); p.y += 2.0; lines.push(addLine(p,new THREE.Vector3(0,3.72,-2.55),true));
+});
+if(alienDeity){ const p = new THREE.Vector3(); alienDeity.getWorldPosition(p); p.y += 0.15; lines.push(addLine(p,new THREE.Vector3(0,3.72,-2.55),true)); }
+
+// Pulse particles that flow along random network paths
+const pulseGeo = new THREE.SphereGeometry(.055,16,8);
+const pulseMat = new THREE.MeshBasicMaterial({color:0xffb13d, transparent:true, opacity:.95, blending:THREE.AdditiveBlending});
+const pulses=[];
+for(let i=0;i<90;i++){
+  const a = nodePositions[Math.floor(Math.random()*nodePositions.length)];
+  const b = nodePositions[Math.floor(Math.random()*nodePositions.length)];
+  const m = new THREE.Mesh(pulseGeo,pulseMat.clone()); root.add(m);
+  pulses.push({m,a,b,t:Math.random(),speed:.0012+Math.random()*.0027});
+}
+
+// ---------- Semi-transparent neural canopy ----------
+const canopy = new THREE.Group(); root.add(canopy);
+for(let i=0;i<26;i++){
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-10+Math.random()*20, 5+Math.random()*3, -9+Math.random()*4),
+    new THREE.Vector3(-7+Math.random()*14, 7+Math.random()*4, -3+Math.random()*4),
+    new THREE.Vector3(-10+Math.random()*20, 5+Math.random()*4, 4+Math.random()*4)
+  ]);
+  const pts = curve.getPoints(60); const g = new THREE.BufferGeometry().setFromPoints(pts);
+  const m = new THREE.LineBasicMaterial({color:i%3?0x13eaff:0xff8a22, transparent:true, opacity:.12 + Math.random()*.08, blending:THREE.AdditiveBlending});
+  canopy.add(new THREE.Line(g,m));
+}
+
+// ---------- Floor / chamber rings ----------
+const floor = new THREE.Mesh(new THREE.CircleGeometry(13,96), new THREE.MeshBasicMaterial({color:0x06262d, transparent:true, opacity:.36, side:THREE.DoubleSide}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-.02; root.add(floor);
+for(let r of [3.2,5.4,7.6,10.2,12.4]){
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r,.012,8,160), new THREE.MeshBasicMaterial({color:0x1ee9ff, transparent:true, opacity:.22, blending:THREE.AdditiveBlending}));
+  ring.rotation.x=Math.PI/2; root.add(ring);
+}
+
+let clock = new THREE.Clock();
+function animate(){
+  const t = clock.getElapsedTime();
+  controls.update();
+  earth.rotation.y = t*.055;
+  stars.rotation.y = t*.004;
+  canopy.rotation.y = Math.sin(t*.12)*.08;
+  const pulse = .5 + .5*Math.sin(t*2.2);
+  fill.intensity = 5.5 + pulse*3.5;
+  warm.intensity = 3.7 + (1-pulse)*3.4;
+  nodeMeshes.forEach((n,i)=>{ const s=1+Math.sin(t*2.8+i*.73)*.20; n.scale.setScalar(s); });
+  lines.forEach((l,i)=>{ l.material.opacity = (i%5===0?.36:.18) + .18*(.5+.5*Math.sin(t*2.5+i)); });
+  panels.forEach((p,i)=>{ p.position.y += Math.sin(t*1.2+i)*0.0009; });
+  humans.forEach((h,i)=>{ h.position.y += Math.sin(t*1.35+i)*0.0009; });
+  if(alienDeity){
+    alienDeity.position.y = 3.72 + Math.sin(t*1.05)*0.12;
+    alienDeity.rotation.y = Math.sin(t*0.28)*0.10;
+    if(alienDeity.userData.haloGroup){
+      alienDeity.userData.haloGroup.rotation.z = t*0.24;
+      alienDeity.userData.haloGroup.rotation.y = Math.sin(t*0.55)*0.20;
+    }
+    if(alienDeity.userData.aura){ alienDeity.userData.aura.scale.setScalar(1.0 + 0.06*Math.sin(t*1.9)); }
+    if(alienDeity.userData.glow){ alienDeity.userData.glow.material.opacity = 0.18 + 0.08*(0.5+0.5*Math.sin(t*2.3)); }
+    if(alienDeity.userData.lowerGlow){ alienDeity.userData.lowerGlow.scale.setScalar(0.96 + 0.06*Math.sin(t*1.8)); }
+  }
+  pulses.forEach(p=>{
+    p.t += p.speed * (1 + .7*Math.sin(t+p.t*6)); if(p.t>1){ p.t=0; p.a=nodePositions[Math.floor(Math.random()*nodePositions.length)]; p.b=nodePositions[Math.floor(Math.random()*nodePositions.length)]; }
+    p.m.position.lerpVectors(p.a,p.b,p.t);
+    p.m.scale.setScalar(.7 + 1.7*Math.sin(Math.PI*p.t));
+    p.m.material.opacity = .25 + .75*Math.sin(Math.PI*p.t);
+  });
+  hud.textContent = renderer.xr.isPresenting ? 'Immersive VR active — noospheric chamber pulsing' : 'Desktop preview — drag/orbit, scroll/zoom, Enter VR on Quest';
+  renderer.render(scene,camera);
+}
+renderer.setAnimationLoop(animate);
+
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+// Keyboard presentation controls
+addEventListener('keydown',(e)=>{
+  if(e.key==='1') camera.position.set(0,5.3,14.5);
+  if(e.key==='2') camera.position.set(0,2.8,7.4);
+  if(e.key==='3') camera.position.set(-9,4.6,5.4);
+  if(e.key==='4') camera.position.set(9,4.6,5.4);
+  controls.target.set(0,2.6,-1.7);
+});
+</script>
+</body>
+</html>
