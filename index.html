@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>Noospheric Network Meditation v5 — WebXR Viewing Space</title>
+  <title>Noospheric Network Meditation v6 — WebXR Viewing Space</title>
   <style>
     html, body { margin:0; height:100%; overflow:hidden; background:#02070a; color:#f7e7b2; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
     #overlay { position:fixed; left:16px; top:14px; z-index:10; max-width:430px; padding:14px 16px; border:1px solid rgba(255,188,63,.45); border-radius:16px; background:linear-gradient(135deg, rgba(2,10,14,.86), rgba(5,30,36,.64)); box-shadow:0 0 30px rgba(0,255,255,.14); backdrop-filter: blur(6px); }
@@ -17,8 +17,8 @@
 <body>
   <div id="overlay">
     <h1>Collective Computer-Assisted Meditation</h1>
-    <p>A pulsing WebXR noosphere chamber: Earth, realistic meditating participants, a mind-network of beacon-thought nodes, dense concept panels, and a central blue four-armed noospheric being, with any front-center humanoid geometry removed.</p>
-    <p class="small">Desktop: drag to orbit, wheel to zoom. Quest/browser: use the Enter VR button. Host through HTTPS for immersive WebXR.</p>
+    <p>A pulsing WebXR noosphere chamber: Earth, realistic meditating participants, a mind-network of beacon-thought nodes, dense concept panels, and a central blue four-armed noospheric being rendered closer to the concept art.</p>
+    <p class="small">Desktop: drag/orbit, wheel/zoom. Quest: Enter VR; left stick moves, right stick turns, trigger resets the VR position.</p>
   </div>
   <div id="hud">Loading noospheric scene…</div>
 
@@ -34,12 +34,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
+import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 
 const hud = document.getElementById('hud');
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x020a0f, 0.032);
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.05, 260);
 camera.position.set(0, 5.3, 14.5);
+const playerRig = new THREE.Group();
+scene.add(playerRig);
+playerRig.add(camera);
 
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -56,6 +60,63 @@ controls.target.set(0, 2.6, 0);
 controls.enableDamping = true;
 controls.maxDistance = 42;
 controls.minDistance = 4;
+
+// ---------- Quest / WebXR VR controls ----------
+const controllerModelFactory = new XRControllerModelFactory();
+let vrResetRequested = false;
+function buildController(index){
+  const controller = renderer.xr.getController(index);
+  const grip = renderer.xr.getControllerGrip(index);
+  grip.add(controllerModelFactory.createControllerModel(grip));
+  const rayGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-2.8)]);
+  const ray = new THREE.Line(rayGeom, new THREE.LineBasicMaterial({color:0x8ef7ff, transparent:true, opacity:.82, blending:THREE.AdditiveBlending}));
+  ray.name = 'vr_pointer_ray';
+  controller.add(ray);
+  controller.addEventListener('selectstart', () => { vrResetRequested = true; });
+  playerRig.add(controller);
+  playerRig.add(grip);
+}
+buildController(0);
+buildController(1);
+
+function readStick(gamepad){
+  if(!gamepad || !gamepad.axes || gamepad.axes.length === 0) return {x:0,y:0};
+  let x = gamepad.axes.length >= 4 ? gamepad.axes[2] : gamepad.axes[0];
+  let y = gamepad.axes.length >= 4 ? gamepad.axes[3] : gamepad.axes[1];
+  const dead = .18;
+  if(Math.abs(x) < dead) x = 0;
+  if(Math.abs(y) < dead) y = 0;
+  return {x,y};
+}
+function resetVRPosition(){
+  playerRig.position.set(0,0,0);
+  playerRig.rotation.set(0,0,0);
+  camera.position.set(0,5.3,14.5);
+  controls.target.set(0,2.6,0);
+}
+function updateVRControls(dt){
+  if(!renderer.xr.isPresenting) return;
+  const session = renderer.xr.getSession();
+  if(!session) return;
+  if(vrResetRequested){ resetVRPosition(); vrResetRequested = false; }
+  const camDir = new THREE.Vector3();
+  camera.getWorldDirection(camDir);
+  camDir.y = 0;
+  if(camDir.lengthSq() < 0.001) camDir.set(0,0,-1);
+  camDir.normalize();
+  const right = new THREE.Vector3().crossVectors(camDir, new THREE.Vector3(0,1,0)).normalize();
+  for(const source of session.inputSources){
+    if(!source.gamepad) continue;
+    const stick = readStick(source.gamepad);
+    if(source.handedness === 'left'){
+      const speed = 3.2;
+      playerRig.position.addScaledVector(right, stick.x * speed * dt);
+      playerRig.position.addScaledVector(camDir, -stick.y * speed * dt);
+    } else if(source.handedness === 'right'){
+      playerRig.rotation.y -= stick.x * 1.75 * dt;
+    }
+  }
+}
 
 const root = new THREE.Group();
 scene.add(root);
@@ -255,7 +316,7 @@ function removeFrontCenterHumanoidArtifacts(){
   const worldPos = new THREE.Vector3();
   root.traverse(obj => {
     if(!obj.isMesh) return;
-    if(alienDeity && (obj === alienDeity || obj.parent === alienDeity || obj.parent?.parent === alienDeity)) return;
+    if(alienDeity && (obj === alienDeity || obj.parent === alienDeity || obj.parent?.parent === alienDeity || obj.parent?.parent?.parent === alienDeity)) return;
     obj.getWorldPosition(worldPos);
     const central = Math.abs(worldPos.x) < 1.8 && worldPos.z > -0.8 && worldPos.z < 1.8 && worldPos.y > 0.15 && worldPos.y < 4.4;
     if(!central) return;
@@ -265,21 +326,14 @@ function removeFrontCenterHumanoidArtifacts(){
     const humanGeom = geomType === 'SphereGeometry' || geomType === 'CylinderGeometry' || geomType === 'BoxGeometry';
     const humanColors = new Set([0xd8955d,0xc98358,0x9f6a4e,0x0e6976,0xf28a19,0x263948,0x080506]);
     const likelyHumanArtifact = namedHumanoid || (humanGeom && humanColors.has(color));
-    // avoid deleting tiny network nodes or intentional halo/ring effects
     const radius = obj.geometry?.parameters?.radius || obj.geometry?.parameters?.radiusTop || 0;
-    if(likelyHumanArtifact && radius > 0.02){
-      toRemove.push(obj);
-    }
+    if(likelyHumanArtifact && radius > 0.02) toRemove.push(obj);
   });
   toRemove.forEach(o => o.parent && o.parent.remove(o));
 }
-
 if(alienDeity){
   alienDeity.traverse(obj => {
-    if(obj.isMesh){
-      obj.renderOrder = 20;
-      if(obj.material) obj.material.depthTest = false;
-    }
+    if(obj.isMesh){ obj.renderOrder = 20; if(obj.material) obj.material.depthTest = false; }
   });
 }
 removeFrontCenterHumanoidArtifacts();
@@ -352,7 +406,9 @@ for(let r of [3.2,5.4,7.6,10.2,12.4]){
 
 let clock = new THREE.Clock();
 function animate(){
+  const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.getElapsedTime();
+  updateVRControls(dt);
   controls.update();
   earth.rotation.y = t*.055;
   stars.rotation.y = t*.004;
@@ -390,7 +446,7 @@ addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.upd
 
 // Keyboard presentation controls
 addEventListener('keydown',(e)=>{
-  if(e.key==='1') camera.position.set(0,5.3,14.5);
+  if(e.key==='1'){ playerRig.position.set(0,0,0); playerRig.rotation.set(0,0,0); camera.position.set(0,5.3,14.5); }
   if(e.key==='2') camera.position.set(0,2.8,7.4);
   if(e.key==='3') camera.position.set(-9,4.6,5.4);
   if(e.key==='4') camera.position.set(9,4.6,5.4);
